@@ -8,10 +8,10 @@ const Promise = require("promise");
 // oh yes give me all those russian hackers
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
+const apikey = "";
+const botOAuthToken = "";
 
-
-
-const channelName = "CHANNEL-NAME";
+const channelName = "";
 const dayNames = [
   "Pondělí",
   "Úterý",
@@ -23,7 +23,7 @@ const dayNames = [
 ];
 
 const bot = new SlackBot({
-  token: "ENTER YOUR O-AUTH BOT TOKEN HERE",
+  token: botOAuthToken,
   name: ""
 });
 
@@ -69,16 +69,19 @@ function handleMessage(message) {
       getZomatoMenu("kolkovna", 17978813, ":ticket:");
     } else if (message.includes("jaros")) {
       getScrapedMenu("jaros", "http://www.ujarosu.cz/cz/denni-menu/");
-      //console.log(foodString);
-      //printFood(foodString);
     } else if (message.includes("majak")) {
       getScrapedMenu(
         "majak",
         "http://www.restaurantmajak.cz/cs/clanky/denni-nabidka"
       );
-    } else if (message.includes("lunchOva")) {
+    } else if (message.includes("freshntasty")) {
+      getScrapedMenu(
+        "freshntastykb",
+        "https://www.freshandtasty.cz/cz/firmy/moje-jidelna-kb/menu/obedy"
+      );
+    } else if (message.includes("menuOva")) {
       getMenuOva();
-    } else if (message.includes("lunchPrg")){
+    } else if (message.includes("menuPrg")) {
       getMenuPrg();
     }
   }
@@ -93,13 +96,12 @@ function getHelp() {
   console.log("Printing help...");
   bot.postMessageToChannel(
     channelName,
-    "Commands:\njack\nlev\nkolkovna\njaros\nmajak\nmenuOva\nmenuPrg",
+    "Commands:\njack\nlev\nkolkovna\njaros\nmajak\nfreshntasty\nmenuOva\nmenuPrg",
     { icon_emoji: ":ambulance:" }
   );
 }
 
 function getZomatoMenu(resName, resId, resEmoji) {
-  const apikey = "095867c74f14a93263123da4db81f5c3";
   const zomatoUrl = "https://developers.zomato.com/api/v2.1/dailymenu?res_id=";
   var foodString = "";
 
@@ -118,6 +120,7 @@ function getZomatoMenu(resName, resId, resEmoji) {
       var dishArray = data.daily_menus[0].daily_menu.dishes;
       var dishArrayString = "";
 
+      //REPETITIVE CODE!
       var currentDayNumber = new Date().getDay() - Number(1); //pondeli musi byt 0
       //currentDayNumber = 4;
       console.log("Day number: " + currentDayNumber);
@@ -126,7 +129,7 @@ function getZomatoMenu(resName, resId, resEmoji) {
       var foodArray = [];
       var priceArray = [];
       for (var i in dishArray) {
-        dishArray[i].dish.name = dishArray[i].dish.name.replace(/\s*$/,'');
+        dishArray[i].dish.name = dishArray[i].dish.name.replace(/\s*$/, "");
         foodArray.push(dishArray[i].dish.name);
         priceArray.push(dishArray[i].dish.price);
       }
@@ -138,7 +141,7 @@ function getZomatoMenu(resName, resId, resEmoji) {
     .catch(error => console.error(error));
 }
 
-////////////// zomato end ////////////
+////////////// ZOMATO END ////////////
 
 //=============================================================================
 
@@ -166,6 +169,10 @@ function getMenuPrg() {
     "majak",
     "http://www.restaurantmajak.cz/cs/clanky/denni-nabidka"
   );
+  getScrapedMenu(
+    "freshntastykb",
+    "https://www.freshandtasty.cz/cz/firmy/moje-jidelna-kb/menu/obedy"
+  );
 }
 
 function requestPage(url) {
@@ -188,20 +195,16 @@ function getScrapedMenu(restaurantName, url) {
 
   requestPage(url).then(html => {
     const $ = cheerio.load(html, { decodeEntities: false });
-
-    console.log(html);
-
     var currentDayNumber = new Date().getDay() - Number(1); //pondeli musi byt 0
     //currentDayNumber = 4;
     console.log("Day number: " + currentDayNumber);
 
     //je treba dale osetrit pripad kdy majak na strankach nema uvedene jidla (v nedeli denni nabidka neni k dispozici)
+    //nektere restaurace serviruji i o vikendu... i fix,dw lemme just chill for a bit
     if (currentDayNumber >= 0 && currentDayNumber < 5) {
       var tempFoodArr = getScrapedFood($, restaurantName, currentDayNumber);
-
       foods = getFoodString(tempFoodArr, currentDayNumber);
-      //bot.postMessageToChannel(channelName, foods);
-      console.log(foods); //sdsdsdsdsdsdsd
+      //console.log(foods);
     } else {
       console.log(
         "Dnes je " +
@@ -210,12 +213,16 @@ function getScrapedMenu(restaurantName, url) {
       );
     }
 
-    if (foods.size != 0) {
+    if (foods.size != 0 && foods != 0) {
       //console.log(foods.size);
       console.log("LOG: I got food!");
       printFood(foods, restaurantName);
     } else {
       console.log("I aquired no foods :(");
+      bot.postMessageToChannel(
+        channelName,
+        "Vypisuji obedy pouze pro Pondeli-Patek"
+      );
     }
   });
 }
@@ -233,6 +240,8 @@ function getRestaurantFullName(restaurantName) {
       return "U Zlatého lva";
     case "kolkovna":
       return "Kolkovna";
+    case "freshntastykb":
+      return "Moje jídelna KB";
     default:
       return "[Restaurant Full Name]";
   }
@@ -259,6 +268,7 @@ function formatTextDots(foodArray) {
 }
 
 function getTableSize($, target) {
+  //pouze pro majak a jarose
   return $("tr", target).length;
 }
 
@@ -282,11 +292,7 @@ function getFoodString(foodArray, currentDayNumber) {
       // Number(i) +
       // Number(1) +
       // ". " +
-      "• " +
-      foodArray[0][i] +
-      "\t" +
-      foodArray[1][i] +
-      "\n";
+      "• " + foodArray[0][i] + "\t" + foodArray[1][i] + "\n";
   } //juvaskrept pls :)
 
   // bot.postMessageToChannel(channelName, foodString, {
@@ -323,7 +329,15 @@ function getScrapedFood($, restaurantName, currentDayNumber) {
       currentDayNumber
     );
   } else if (restaurantName == "freshntastykb") {
-    //freshnTasty
+    scopeTarget = ".whole-menu__wrap menu"; //???
+    return scrapeFood(
+      $,
+      getTableSize($, scopeTarget),
+      scopeTarget,
+      restaurantName,
+      0,
+      currentDayNumber
+    );
   }
 }
 
@@ -336,6 +350,48 @@ function scrapeFood(
   restaurantName,
   maxFoodsPerDay,
   currentDayNumber
+) {
+  if (restaurantName == "majak" || restaurantName == "jaros") {
+    return scrapeMajakOrJaros(
+      tableSize,
+      restaurantName,
+      scopeTarget,
+      $,
+      currentDayNumber,
+      maxFoodsPerDay
+    );
+  } else if (restaurantName == "freshntastykb") {
+    return scrapeFreshNTasty($, currentDayNumber);
+  }
+
+  //tahle rozhodovaci technika funguje pouze pro jarose a majak.
+  // v kazdem tr prvku muze byt den, jidlo, cena
+
+  /*
+  Pro freshntasty se ale iteruje meal__items 
+  a podle selectoru H2 (dewn a datum) se zvolí  meal__items k patřičnému pitvání.
+
+  pro vybrany meal__items se poté jednotlivě iterují jeho vnitřnosti (meal__item)
+  
+  meal__item v sobě ukrývá selektory:
+  - "meal__item--first", který má sdělit pravdu o jaký typ pokrmu se jedná.
+  - "meal__item--second", obsahujíc název k patřičné stravě
+
+
+
+  bude muset byt zaveden scrapeFactory. Kod nize je pouze pro majak a jarose
+  */
+}
+
+// ====================================================================
+
+function scrapeMajakOrJaros(
+  tableSize,
+  restaurantName,
+  scopeTarget,
+  $,
+  currentDayNumber,
+  maxFoodsPerDay
 ) {
   var justFoods = [];
   var justPrices = [];
@@ -378,12 +434,43 @@ function scrapeFood(
       );
     }
   }
-  return [justFoods, justPrices]; //?
+  return [justFoods, justPrices]; 
 }
 
-// ====================================================================
+function scrapeFreshNTasty($, currentDayNumber) {
+  var justFoods = [];
+  var justPrices = [];
 
-//function selectorBuilder(restaurantName,type,i)
+  ////////
+  var freshNTastyCurrDayNumber = currentDayNumber + Number(2);
+
+  //foods thursday select
+  $(
+    ".meal__item--second",
+    `.meal__items:nth-child(${freshNTastyCurrDayNumber})`
+  ).each((i, element) => {
+    justFoods.push($(element).html());
+  });
+  //prices select
+  $(
+    ".meal__item--third",
+    `.meal__items:nth-child(${freshNTastyCurrDayNumber})`
+  ).each((i, element) => {
+    justPrices.push($(element).html());
+  });
+
+  for (i = 0; i <= justFoods.length; i++) {
+    if (justFoods[i] == "") {
+      justFoods.splice(i, 1);
+      justPrices.splice(i, 1);
+    }
+  }
+
+ 
+
+  return [justFoods, justPrices];
+}
+
 function selectorFactory(restaurantName, type, i) {
   switch (restaurantName) {
     case "majak":
@@ -413,3 +500,4 @@ function selectorFactory(restaurantName, type, i) {
       );
   }
 }
+
