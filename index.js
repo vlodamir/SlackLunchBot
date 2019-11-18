@@ -8,10 +8,12 @@ const Promise = require("promise");
 // oh yes give me all those russian hackers
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
-const apikey = "";
-const botOAuthToken = "";
 
+const apikey = "";
+
+const botOAuthToken = "";
 const channelName = "";
+
 const dayNames = [
   "Pondělí",
   "Úterý",
@@ -34,7 +36,7 @@ bot.on("start", () => {
   };
 
   console.log("You hungri boiii?");
-  bot.postMessageToChannel(channelName, "You look hungry", params);
+  //bot.postMessageToChannel(channelName, "You look hungry", params);
 });
 
 //Error handler
@@ -54,38 +56,44 @@ bot.on("message", data => {
 //Responds to Data
 var previousMessage = "";
 function handleMessage(message) {
-  if (message.includes == "hey lenny") {
-    bot.postMessageToUser("Miroslav Vlodarčík", "this should work", {
-      icon_emoji: ":robot_face:"
-    });
-  }
+  message = message.toLowerCase();
 
   if (previousMessage != "help") {
-    if (message.includes("jack")) {
+    if (message == "jack") {
       getZomatoMenu("jack", 16525845, ":hamburger:");
-    } else if (message.includes("lev")) {
+    } else if (message == "lev" || message == "ulva") {
       getZomatoMenu("lev", 16513499, ":lion_face:");
-    } else if (message.includes("kolkovna")) {
+    } else if (message == "kolkovna") {
       getZomatoMenu("kolkovna", 17978813, ":ticket:");
-    } else if (message.includes("jaros")) {
+    } else if (message == "jaros" || message == "ujarosu") {
       getScrapedMenu("jaros", "http://www.ujarosu.cz/cz/denni-menu/");
-    } else if (message.includes("majak")) {
+    } else if (message == "majak") {
       getScrapedMenu(
         "majak",
         "http://www.restaurantmajak.cz/cs/clanky/denni-nabidka"
       );
-    } else if (message.includes("freshntasty")) {
+    } else if (message == "freshntasty" || message == "freshntastykb") {
       getScrapedMenu(
         "freshntastykb",
         "https://www.freshandtasty.cz/cz/firmy/moje-jidelna-kb/menu/obedy"
       );
-    } else if (message.includes("menuOva")) {
+    } else if (message == "basta") {
+      getScrapedMenu(
+        "basta",
+        "http://www.pustkoveckabasta.cz/pustkovecka-basta"
+      );
+    } else if (message == "sodexo") {
+      getScrapedMenu(
+        "sodexosiemens",
+        "http://siemens.portal.sodexo.cz/cs/jidelni-listek-na-cely-tyden"
+      );
+    } else if (message == "menuova") {
       getMenuOva();
-    } else if (message.includes("menuPrg")) {
+    } else if (message == "menuprg") {
       getMenuPrg();
     }
   }
-  if (message.includes("help")) {
+  if (message == "help") {
     getHelp(); //stop it. get some help.
   }
 
@@ -96,7 +104,9 @@ function getHelp() {
   console.log("Printing help...");
   bot.postMessageToChannel(
     channelName,
-    "Commands:\njack\nlev\nkolkovna\njaros\nmajak\nfreshntasty\nmenuOva\nmenuPrg",
+    "*Commands for Ostrava:*\n>Jack\n>Lev\n>Jaros\n>Basta\n>MenuOva\n" +
+      "*Commands for Prague:*\n>Majak\n>Kolkovna\n>Freshntasty\n>MenuPrg\n" +
+      "_...commands aren't case sensitive_",
     { icon_emoji: ":ambulance:" }
   );
 }
@@ -161,6 +171,7 @@ function getMenuOva() {
   getScrapedMenu("jaros", "http://www.ujarosu.cz/cz/denni-menu/");
   getZomatoMenu("jack", 16525845, ":hamburger:");
   getZomatoMenu("lev", 16513499, ":lion_face:");
+  getScrapedMenu("basta", "http://www.pustkoveckabasta.cz/pustkovecka-basta");
 }
 
 function getMenuPrg() {
@@ -172,6 +183,10 @@ function getMenuPrg() {
   getScrapedMenu(
     "freshntastykb",
     "https://www.freshandtasty.cz/cz/firmy/moje-jidelna-kb/menu/obedy"
+  );
+  getScrapedMenu(
+    "sodexosiemens",
+    "http://siemens.portal.sodexo.cz/cs/jidelni-listek-na-cely-tyden"
   );
 }
 
@@ -242,6 +257,10 @@ function getRestaurantFullName(restaurantName) {
       return "Kolkovna";
     case "freshntastykb":
       return "Moje jídelna KB";
+    case "basta":
+      return "Pustkovecká Bašta";
+    case "sodexosiemens":
+      return "Sodexo Siemens";
     default:
       return "[Restaurant Full Name]";
   }
@@ -293,13 +312,7 @@ function getFoodString(foodArray, currentDayNumber) {
       // Number(1) +
       // ". " +
       "• " + foodArray[0][i] + "\t" + foodArray[1][i] + "\n";
-  } //juvaskrept pls :)
-
-  // bot.postMessageToChannel(channelName, foodString, {
-  //   icon_emoji: ":rotating_light:"
-  // });
-
-  //console.log(foodString);
+  }
   return foodString;
 }
 
@@ -338,6 +351,10 @@ function getScrapedFood($, restaurantName, currentDayNumber) {
       0,
       currentDayNumber
     );
+  } else if (restaurantName == "basta") {
+    return scrapeFood($, 0, "", "basta", 0, 0);
+  } else if (restaurantName == "sodexosiemens") {
+    return scrapeFood($, 0, "", "sodexosiemens", 0, currentDayNumber);
   }
 }
 
@@ -362,6 +379,10 @@ function scrapeFood(
     );
   } else if (restaurantName == "freshntastykb") {
     return scrapeFreshNTasty($, currentDayNumber);
+  } else if (restaurantName == "basta") {
+    return scrapBasta($);
+  } else if (restaurantName == "sodexosiemens") {
+    return scrapeSodexoSiemens($, currentDayNumber);
   }
 
   //tahle rozhodovaci technika funguje pouze pro jarose a majak.
@@ -434,12 +455,14 @@ function scrapeMajakOrJaros(
       );
     }
   }
-  return [justFoods, justPrices]; 
+  return [justFoods, justPrices];
 }
 
+//chybi meal__item--extra
 function scrapeFreshNTasty($, currentDayNumber) {
   var justFoods = [];
   var justPrices = [];
+  var justExtra = [];
 
   ////////
   var freshNTastyCurrDayNumber = currentDayNumber + Number(2);
@@ -459,14 +482,86 @@ function scrapeFreshNTasty($, currentDayNumber) {
     justPrices.push($(element).html());
   });
 
+  $(
+    ".meal__item--extra",
+    `.meal__items:nth-child(${freshNTastyCurrDayNumber})`
+  ).each((i, element) => {
+    justExtra.push($(element).html());
+  });
+
   for (i = 0; i <= justFoods.length; i++) {
     if (justFoods[i] == "") {
       justFoods.splice(i, 1);
       justPrices.splice(i, 1);
+      justExtra.splice(i, 1);
     }
+    // if(justExtra[i] != ""){
+    //   justFoods[i]+= " (" + justExtra[i] + ")";
+    // }
   }
 
- 
+  return [justFoods, justPrices];
+}
+
+function scrapBasta($) {
+  var justFoods = [];
+  var justPrices = [];
+  var detail = [];
+
+  $("li h4", "#daily2 .daily-item.today").each((i, element) => {
+    justFoods.push($(element).html());
+  });
+
+  $("li .price", "#daily2 .daily-item.today").each((i, element) => {
+    justPrices.push(
+      $(element)
+        .html()
+        .trim()
+    );
+  });
+
+  $("li .menu-detail", "#daily2 .daily-item.today").each((i, element) => {
+    detail.push(
+      $(element)
+        .html()
+        .trim()
+    );
+  });
+  //polevka nema cenu
+  justPrices.unshift("");
+
+  for (var i in justFoods) {
+    justFoods[i] = justFoods[i] + " " + detail[i];
+  }
+
+  return [justFoods, justPrices];
+}
+
+function scrapeSodexoSiemens($, currentDayNumber) {
+  var justFoods = [];
+  var justPrices = [];
+  var detail = [];
+
+  //var currentDayNumber = new Date().getDay() - Number(1); //pondeli musi byt 0
+  //currentDayNumber = 4; //debug
+  var siemensDay = currentDayNumber * -1 + Number(4);
+
+  $(".popisJidla", `#menu-${siemensDay}`).each((i, element) => {
+    justFoods.push($(element).text());
+  });
+
+  $(".vaha", `#menu-${siemensDay}`).each((i, element) => {
+    detail.push($(element).text());
+  });
+
+  $(".pismo", `#menu-${siemensDay}`).each((i, element) => {
+    justPrices.push($(element).text());
+  });
+
+  // for(var i in justFoods){
+  //     justFoods[i] = justFoods[i] + " " + detail[i];
+  //     console.log(justFoods[i] + "........." + justPrices[i]);
+  // }
 
   return [justFoods, justPrices];
 }
@@ -500,4 +595,3 @@ function selectorFactory(restaurantName, type, i) {
       );
   }
 }
-
