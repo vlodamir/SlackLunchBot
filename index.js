@@ -8,7 +8,6 @@ const Promise = require("promise");
 // oh yes give me all those russian hackers
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
-
 const apikey = "";
 
 const botOAuthToken = "";
@@ -57,6 +56,11 @@ bot.on("message", data => {
 var previousMessage = "";
 function handleMessage(message) {
   message = message.toLowerCase();
+  if (message.includes == "hey lenny") {
+    bot.postMessageToUser("Miroslav Vlodarčík", "this should work", {
+      icon_emoji: ":robot_face:"
+    });
+  }
 
   if (previousMessage != "help") {
     if (message == "jack") {
@@ -384,24 +388,6 @@ function scrapeFood(
   } else if (restaurantName == "sodexosiemens") {
     return scrapeSodexoSiemens($, currentDayNumber);
   }
-
-  //tahle rozhodovaci technika funguje pouze pro jarose a majak.
-  // v kazdem tr prvku muze byt den, jidlo, cena
-
-  /*
-  Pro freshntasty se ale iteruje meal__items 
-  a podle selectoru H2 (dewn a datum) se zvolí  meal__items k patřičnému pitvání.
-
-  pro vybrany meal__items se poté jednotlivě iterují jeho vnitřnosti (meal__item)
-  
-  meal__item v sobě ukrývá selektory:
-  - "meal__item--first", který má sdělit pravdu o jaký typ pokrmu se jedná.
-  - "meal__item--second", obsahujíc název k patřičné stravě
-
-
-
-  bude muset byt zaveden scrapeFactory. Kod nize je pouze pro majak a jarose
-  */
 }
 
 // ====================================================================
@@ -416,6 +402,7 @@ function scrapeMajakOrJaros(
 ) {
   var justFoods = [];
   var justPrices = [];
+  var detail = [];
   var addedFoods = 0;
   var canAdd = false;
 
@@ -448,11 +435,26 @@ function scrapeMajakOrJaros(
         }
       );
 
+      $(`tr:nth-child(${i}) td:nth-child(1)`).each(
+        (i,element) => {
+          detail.push($(element).html().trim());
+        }
+      )
+
       $(selectorFactory(restaurantName, "price", i), scopeTarget).each(
         function() {
           justPrices.push($(this).html());
         }
       );
+    }
+
+    
+  }
+
+  if(restaurantName == "jaros"){
+    detail[0] = "";
+    for(var i in justFoods){
+      justFoods[i] = detail[i] + " " + justFoods[i];
     }
   }
   return [justFoods, justPrices];
@@ -531,7 +533,7 @@ function scrapBasta($) {
   justPrices.unshift("");
 
   for (var i in justFoods) {
-    justFoods[i] = justFoods[i] + " " + detail[i];
+    justFoods[i] = detail[i] + " " + justFoods[i]  ;
   }
 
   return [justFoods, justPrices];
@@ -558,10 +560,13 @@ function scrapeSodexoSiemens($, currentDayNumber) {
     justPrices.push($(element).text());
   });
 
-  // for(var i in justFoods){
-  //     justFoods[i] = justFoods[i] + " " + detail[i];
-  //     console.log(justFoods[i] + "........." + justPrices[i]);
-  // }
+  for(var i in justFoods){
+    if(detail[i] == ""){
+      detail[i] = "---g"
+    }
+      justFoods[i] = detail[i] + " " + justFoods[i] ;
+      //console.log(justFoods[i] + "........." + justPrices[i]);
+  }
 
   return [justFoods, justPrices];
 }
