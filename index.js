@@ -91,9 +91,9 @@ function handleMessage(message) {
         "sodexosiemens",
         "http://siemens.portal.sodexo.cz/cs/jidelni-listek-na-cely-tyden"
       );
-    } else if (message == "menuova") {
+    } else if (message.includes("menuova")) {
       getMenuOva();
-    } else if (message == "menuprg") {
+    } else if (message.includes("menuprg")) {
       getMenuPrg();
     }
   }
@@ -162,9 +162,10 @@ function getZomatoMenu(resName, resId, resEmoji) {
 function printFood(foodString, restaurantName) {
   console.log(foodString);
   var slackString =
-    "Menu pro restauraci " +
+    //"Menu pro restauraci " +
+    "*" +
     getRestaurantFullName(restaurantName) +
-    ": " +
+    "*: " +
     "```" +
     foodString +
     "```";
@@ -600,3 +601,4 @@ function selectorFactory(restaurantName, type, i) {
       );
   }
 }
+
