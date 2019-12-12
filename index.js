@@ -4,7 +4,7 @@ const cheerio = require("cheerio");
 const request = require("request");
 const Promise = require("promise");
 
-getEnv("NODE_END");
+getEnv("NODE_ENV");
 
 const ZOMATO_KEY = getEnv("ZOMATO_APIKEY");
 
