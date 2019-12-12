@@ -1,7 +1,6 @@
 {
   "name": "sdubot",
-  "version": "1.0.0",
-  "description": "BOT that is super duper useful",
+  "private": true,
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
