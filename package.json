@@ -1,22 +1,19 @@
 {
   "name": "sdubot",
-  "version": "1.0.0",
-  "description": "BOT that is super duper useful",
+  "private": true,
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node -r dotenv/config index.js"
   },
   "author": "Miroslav Vlodarčík",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.19.0",
     "cheerio": "^1.0.0-rc.3",
-    "fetch": "^1.1.0",
     "node-fetch": "^2.6.0",
-    "pdf-parse": "^1.1.1",
-    "pdf-to-text": "0.0.7",
-    "pdf2html": "^2.5.0",
     "promise": "^8.0.3",
     "slackbots": "^1.2.0"
+  },
+  "devDependencies": {
+    "dotenv": "^8.2.0"
   }
 }

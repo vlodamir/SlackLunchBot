@@ -1,17 +1,15 @@
 const SlackBot = require("slackbots");
-const axios = require("axios");
 const fetch = require("node-fetch");
 const cheerio = require("cheerio");
 const request = require("request");
 const Promise = require("promise");
 
-// oh yes give me all those russian hackers
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
+getEnv("NODE_ENV");
 
-const apikey = "";
+const ZOMATO_KEY = getEnv("ZOMATO_APIKEY");
 
-const botOAuthToken = "";
-const channelName = "";
+const SLACK_TOKEN = getEnv("SLACK_TOKEN");
+const SLACK_CHANNEL = getEnv("SLACK_CHANNEL");
 
 const dayNames = [
   "Pondělí",
@@ -23,8 +21,14 @@ const dayNames = [
   "Neděle"
 ];
 
+function getEnv(envName) {
+  const v = process.env[envName];
+  if (v === undefined) { throw new Error(`Missing ENV variable "${envName}"`); }
+  return v;
+}
+
 const bot = new SlackBot({
-  token: botOAuthToken,
+  token: SLACK_TOKEN,
   name: ""
 });
 
@@ -35,7 +39,7 @@ bot.on("start", () => {
   };
 
   console.log("You hungri boiii?");
-  //bot.postMessageToChannel(channelName, "You look hungry", params);
+  //bot.postMessageToChannel(SLACK_CHANNEL, "You look hungry", params);
 });
 
 //Error handler
@@ -107,7 +111,7 @@ function handleMessage(message) {
 function getHelp() {
   console.log("Printing help...");
   bot.postMessageToChannel(
-    channelName,
+    SLACK_CHANNEL,
     "*Commands for Ostrava:*\n>Jack\n>Lev\n>Jaros\n>Basta\n>MenuOva\n" +
       "*Commands for Prague:*\n>Majak\n>Kolkovna\n>Freshntasty\n>MenuPrg\n" +
       "_...commands aren't case sensitive_",
@@ -122,7 +126,7 @@ function getZomatoMenu(resName, resId, resEmoji) {
   fetch(zomatoUrl + resId, {
     method: "GET",
     headers: {
-      user_key: apikey
+      user_key: ZOMATO_KEY
     }
   })
     .then(response => response.json())
@@ -169,7 +173,7 @@ function printFood(foodString, restaurantName) {
     "```" +
     foodString +
     "```";
-  bot.postMessageToChannel(channelName, slackString);
+  bot.postMessageToChannel(SLACK_CHANNEL, slackString);
 }
 
 function getMenuOva() {
@@ -240,7 +244,7 @@ function getScrapedMenu(restaurantName, url) {
     } else {
       console.log("I aquired no foods :(");
       bot.postMessageToChannel(
-        channelName,
+        SLACK_CHANNEL,
         "Vypisuji obedy pouze pro Pondeli-Patek"
       );
     }
