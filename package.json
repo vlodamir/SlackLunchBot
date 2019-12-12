@@ -3,7 +3,7 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node -r dotenv/config index.js"
   },
   "author": "Miroslav Vlodarčík",
   "license": "ISC",
@@ -12,5 +12,8 @@
     "node-fetch": "^2.6.0",
     "promise": "^8.0.3",
     "slackbots": "^1.2.0"
+  },
+  "devDependencies": {
+    "dotenv": "^8.2.0"
   }
 }
